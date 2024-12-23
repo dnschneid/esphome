@@ -36,7 +36,7 @@ class IDFI2CBus : public I2CBus, public Component {
   RecoveryCode recovery_result_;
 
  protected:
-  i2c_port_t port_;
+  i2c_port_t port_ = -1;
   uint8_t sda_pin_;
   bool sda_pullup_enabled_;
   uint8_t scl_pin_;

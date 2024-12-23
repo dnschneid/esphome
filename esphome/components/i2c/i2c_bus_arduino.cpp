@@ -15,25 +15,27 @@ static const char *const TAG = "i2c.arduino";
 void ArduinoI2CBus::setup() {
   recover_();
 
+  if (!this->wire_) {
 #if defined(USE_ESP32)
-  static uint8_t next_bus_num = 0;
-  if (next_bus_num == 0) {
-    wire_ = &Wire;
-  } else {
-    wire_ = new TwoWire(next_bus_num);  // NOLINT(cppcoreguidelines-owning-memory)
-  }
-  next_bus_num++;
+    static uint8_t next_bus_num = 0;
+    if (next_bus_num == 0) {
+      wire_ = &Wire;
+    } else {
+      wire_ = new TwoWire(next_bus_num);  // NOLINT(cppcoreguidelines-owning-memory)
+    }
+    next_bus_num++;
 #elif defined(USE_ESP8266)
-  wire_ = new TwoWire();  // NOLINT(cppcoreguidelines-owning-memory)
+    wire_ = new TwoWire();  // NOLINT(cppcoreguidelines-owning-memory)
 #elif defined(USE_RP2040)
-  static bool first = true;
-  if (first) {
-    wire_ = &Wire;
-    first = false;
-  } else {
-    wire_ = &Wire1;  // NOLINT(cppcoreguidelines-owning-memory)
-  }
+    static bool first = true;
+    if (first) {
+      wire_ = &Wire;
+      first = false;
+    } else {
+      wire_ = &Wire1;  // NOLINT(cppcoreguidelines-owning-memory)
+    }
 #endif
+  }
 
   this->set_pins_and_clock_();
 

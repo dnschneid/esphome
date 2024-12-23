@@ -35,7 +35,7 @@ class ArduinoI2CBus : public I2CBus, public Component {
   RecoveryCode recovery_result_;
 
  protected:
-  TwoWire *wire_;
+  TwoWire *wire_ = NULL;
   uint8_t sda_pin_;
   uint8_t scl_pin_;
   uint32_t frequency_;
