@@ -249,6 +249,31 @@ ErrorCode IDFI2CBus::writev(uint8_t address, WriteBuffer *buffers, size_t cnt, b
   return ERROR_OK;
 }
 
+void IDFI2CBus::discharge() {
+  ESP_LOGI(TAG, "Discharging I2C bus");
+
+  const gpio_num_t scl_pin = static_cast<gpio_num_t>(this->scl_pin_);
+  const gpio_num_t sda_pin = static_cast<gpio_num_t>(this->sda_pin_);
+
+  // Avoid contention on the pins
+  i2c_driver_delete(this->port_);
+
+  // Configure pins pin to drive low, no pull-ups
+  gpio_config_t config{};
+  config.mode = GPIO_MODE_OUTPUT;
+  config.pull_up_en = GPIO_PULLUP_DISABLE;
+  config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  config.intr_type = GPIO_INTR_DISABLE;
+
+  gpio_set_level(scl_pin, 0);
+  config.pin_bit_mask = 1ULL << this->scl_pin_;
+  gpio_config(&config);
+
+  gpio_set_level(sda_pin, 0);
+  config.pin_bit_mask = 1ULL << this->sda_pin_;
+  gpio_config(&config);
+}
+
 /// Perform I2C bus recovery, see:
 /// https://www.nxp.com/docs/en/user-guide/UM10204.pdf
 /// https://www.analog.com/media/en/technical-documentation/application-notes/54305147357414AN686_0.pdf

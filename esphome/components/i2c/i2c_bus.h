@@ -91,6 +91,10 @@ class I2CBus {
   /// @details This is a pure virtual method that must be implemented in the subclass.
   virtual ErrorCode writev(uint8_t address, WriteBuffer *buffers, size_t count, bool stop) = 0;
 
+  /// @brief This virtual method attempts to discharge the bus by driving low.
+  /// @details The I2C bus will be unavailable until setup() is called again.
+  virtual void discharge() = 0;
+
  protected:
   /// @brief Scans the I2C bus for devices. Devices presence is kept in an array of std::pair
   /// that contains the address and the corresponding bool presence flag.

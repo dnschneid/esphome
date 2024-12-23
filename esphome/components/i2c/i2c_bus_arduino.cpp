@@ -213,6 +213,15 @@ ErrorCode ArduinoI2CBus::writev(uint8_t address, WriteBuffer *buffers, size_t cn
   }
 }
 
+void ArduinoI2CBus::discharge() {
+  ESP_LOGI(TAG, "Discharging I2C bus");
+  this->initialized_ = false;
+  digitalWrite(this->scl_pin_, LOW);  // NOLINT
+  pinMode(this->scl_pin_, OUTPUT);  // NOLINT
+  digitalWrite(this->sda_pin_, LOW);  // NOLINT
+  pinMode(this->sda_pin_, OUTPUT);  // NOLINT
+}
+
 /// Perform I2C bus recovery, see:
 /// https://www.nxp.com/docs/en/user-guide/UM10204.pdf
 /// https://www.analog.com/media/en/technical-documentation/application-notes/54305147357414AN686_0.pdf
