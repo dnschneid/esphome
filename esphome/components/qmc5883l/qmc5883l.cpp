@@ -25,10 +25,12 @@ static const uint8_t QMC5883L_REGISTER_PERIOD = 0x0B;
 
 void QMC5883LComponent::setup() {
   ESP_LOGCONFIG(TAG, "Setting up QMC5883L...");
+  high_freq_.stop();
+
   // Soft Reset
   if (!this->write_byte(QMC5883L_REGISTER_CONTROL_2, 1 << 7)) {
     this->error_code_ = COMMUNICATION_FAILED;
-    this->mark_failed();
+    this->status_set_error("soft reset failed");
     return;
   }
   delay(10);
@@ -40,7 +42,7 @@ void QMC5883LComponent::setup() {
   control_1 |= this->oversampling_ << 6;
   if (!this->write_byte(QMC5883L_REGISTER_CONTROL_1, control_1)) {
     this->error_code_ = COMMUNICATION_FAILED;
-    this->mark_failed();
+    this->status_set_error("writing control 1 failed");
     return;
   }
 
@@ -50,16 +52,20 @@ void QMC5883LComponent::setup() {
   control_2 |= 0b0 << 0;  // INT_ENB (Interrupt) -> 0b00=disabled, 0b01=enabled
   if (!this->write_byte(QMC5883L_REGISTER_CONTROL_2, control_2)) {
     this->error_code_ = COMMUNICATION_FAILED;
-    this->mark_failed();
+    this->status_set_error("writing control 2 failed");
     return;
   }
 
   uint8_t period = 0x01;  // recommended value
   if (!this->write_byte(QMC5883L_REGISTER_PERIOD, period)) {
     this->error_code_ = COMMUNICATION_FAILED;
-    this->mark_failed();
+    this->status_set_error("writing period failed");
     return;
   }
+
+  this->error_code_ = NONE;
+  this->status_clear_warning();
+  this->status_clear_error();
 
   if (this->get_update_interval() < App.get_loop_interval()) {
     high_freq_.start();
@@ -81,6 +87,12 @@ void QMC5883LComponent::dump_config() {
 }
 float QMC5883LComponent::get_setup_priority() const { return setup_priority::DATA; }
 void QMC5883LComponent::update() {
+  // Setup failed. Try again.
+  if (this->error_code_ != NONE) {
+    this->setup();
+    return;
+  }
+
   i2c::ErrorCode err;
   uint8_t status = false;
   // Status byte gets cleared when data is read, so we have to read this first.
